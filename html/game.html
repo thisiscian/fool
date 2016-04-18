@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+	<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
+	<meta content='utf-8' http-equiv='encoding'>
+	<title>fool/game</title>
+	<head>
+		<script src="/socket.io/socket.io.js"></script>
+	</head>
+	<body>
+		<h1>fool game</h1>
+		<div id='players'>players:undefined</div>
+		<div id='hand'>hand:undefined</div>
+		<div id='status'>status:undefined</div>
+		<div id='trump'>trump:undefined</div>
+		<script> 
+			function update_players() {
+				players_div.innerHTML='<div>'+socket.id+'</div>'
+				for(var p in players)
+					players_div.innerHTML+='<div>'+p+'</div>'	
+			}
+			function update_hand() {
+				hand_div.innerHTML='hand:'
+				for(var card in hand)
+					hand_div.innerHTML+='<div>hand['+card+']='+hand[card][0]+','+hand[card][1]+'</div>'	
+			}
+			function update_trump() {
+				trump_div.innerHTML='<div>trump:'+trump[0]+','+trump[1]+'</div>'
+			}
+			function update_status() {
+				status_div.innerHTML='<div>status:'+defender==socket.id?'defender':'status'+'</div>'
+			}
+
+			var players={}
+			var hand=[];
+			var board=[];
+			var trump=[];
+			var defender=undefined;
+			var players_div=document.getElementById('players')
+			var hand_div=document.getElementById('hand')
+			var trump_div=document.getElementById('trump')
+			var status_div=document.getElementById('status')
+
+			var socket=io()
+			socket.on('connect',update_players);
+			socket.emit('join game', window.location.pathname);	
+
+			socket.on('join', function(id) {
+				players[id]={}
+				update_players();
+			});
+			socket.on('leave', function(id) {
+				delete players[id];
+				update_players();
+			});
+			socket.on('hand', function(h) {
+				hand=h;
+				update_hand();
+			});
+			socket.on('owner', function(h) {
+				var start_btn=document.createElement('input')
+				start_btn.type='button'
+				start_btn.value='start'
+				start_btn.onclick=function() { socket.emit('start'); }
+				document.body.appendChild(start_btn);
+			});
+			socket.on('trump', function(t) {
+				trump=t;
+				update_trump();
+			});
+			socket.on('defender', function(d) {
+				defender=d;
+				update_status();
+			});
+
+		</script>
+	</body>
+</html>
