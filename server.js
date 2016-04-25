@@ -16,20 +16,20 @@ http.listen(port,function(){console.log('listening on *:'+port);});
 
 function Connection(socket) {
 	var game=undefined;
-	function play_cards(data){
-		io.emit('cards played',data)
+	function play_cards(cards,defend_against){
+		game.play(socket.id,cards,defend_against)
 	}
 	function join_game(room){
 		if(room in games)
 			game=games[room]
 		else
-			game=games[room]=new fool.Game(room)
-		game.join(socket);
+			game=games[room]=new fool.FoolGame(room)
+		game.join(socket.id);
 	}
 	function leave_game(){
 		console.log('Leaving...',socket.id)
 		if(typeof(game)!=='undefined')
-			game.leave(socket);
+			game.leave(socket.id);
 	}
 	function start_game(){
 		var player_ids=Object.keys(game.players)
@@ -38,7 +38,7 @@ function Connection(socket) {
 	}
 
 	console.log('Connection made',socket.id)
-	socket.on('play cards',play_cards);
+//	socket.on('play cards',play_cards);
 	socket.on('join game' ,join_game);
 	socket.on('disconnect',leave_game);
 	socket.on('start',start_game);

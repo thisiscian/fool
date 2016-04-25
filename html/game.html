@@ -11,58 +11,83 @@
 		<div id='players'>players:undefined</div>
 		<div id='hand'>hand:undefined</div>
 		<div id='status'>status:undefined</div>
-		<div id='trump'>trump:undefined</div>
+		<div id='trump'>trump:</div>
+		<button onclick='play_selected_cards()'>play cards</button>
 		<script> 
-			function update_players() {
-				players_div.innerHTML='<div>'+socket.id+'</div>'
-				for(var p in players)
-					players_div.innerHTML+='<div>'+p+'</div>'	
+			function render_card(card) {
+				var cards=['&hearts;','&spades;','&diams;','&clubs;']
+				var ranks=['7','8','9','10','J','Q','K','A']
+				var c=document.createElement('div')
+				c.innerHTML=ranks[card[1]]+cards[card[0]];
+				return c;
 			}
-			function update_hand() {
+			
+			function toggle_select_card(card_index) {
+				if(selected_cards[card_index])
+					selected_cards.splice(card_index,1)
+				else
+					selected_cards[card_index]=true;
+				update_hand();
+			}
+
+			function play_selected_cards() {
+				socket.emit('play',selected_cards,defend_against)
+			}
+
+			function update_players(players) {
+				players_div.innerHTML='';
+				for(var p in players)
+					players_div.innerHTML+='<div>'+players[p].name+'</div>'	
+			}
+			function update_hand(h) {
+				hand=h;
 				hand_div.innerHTML='hand:'
-				for(var card in hand)
-					hand_div.innerHTML+='<div>hand['+card+']='+hand[card][0]+','+hand[card][1]+'</div>'	
+				for(var card in hand) {
+					var c=render_card(hand[card])
+					c.onclick=(function(card){return function(){toggle_select_card(card)};})(card);
+					if(selected_cards[card])
+						c.innerHTML+='*'
+					hand_div.appendChild(c)
+				}
 			}
 			function update_trump() {
-				trump_div.innerHTML='<div>trump:'+trump[0]+','+trump[1]+'</div>'
+				trump_div.appendChild(render_card(trump))
 			}
 			function update_status() {
-				status_div.innerHTML='<div>status:'+defender==socket.id?'defender':'status'+'</div>'
+				status_div.innerHTML='<div>status:'+(defender=='/#'+socket.id?'defender':'attacker')+'</div>'
 			}
 
 			var players={}
 			var hand=[];
 			var board=[];
 			var trump=[];
+			var selected_cards=[];
 			var defender=undefined;
+			var defend_against=undefined;
 			var players_div=document.getElementById('players')
 			var hand_div=document.getElementById('hand')
 			var trump_div=document.getElementById('trump')
 			var status_div=document.getElementById('status')
 
 			var socket=io()
-			socket.on('connect',update_players);
 			socket.emit('join game', window.location.pathname);	
 
-			socket.on('join', function(id) {
-				players[id]={}
-				update_players();
-			});
-			socket.on('leave', function(id) {
-				delete players[id];
-				update_players();
-			});
-			socket.on('hand', function(h) {
-				hand=h;
-				update_hand();
-			});
+			socket.on('update players', update_players);
+			socket.on('update hand', update_hand);
+
 			socket.on('owner', function(h) {
 				var start_btn=document.createElement('input')
+				start_btn.id='start'
 				start_btn.type='button'
 				start_btn.value='start'
-				start_btn.onclick=function() { socket.emit('start'); }
+				start_btn.onclick=function() { socket.emit('start'); document.body.removeChild(this);};
 				document.body.appendChild(start_btn);
 			});
+			
+			socket.on('start',function() {
+				document.body.removeChild(document.getElementById('start'));
+			});
+
 			socket.on('trump', function(t) {
 				trump=t;
 				update_trump();
