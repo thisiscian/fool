@@ -1,0 +1,18 @@
+#players {
+	border: 1px solid black;
+}
+
+#players > * {
+	padding:2px;
+	margin:2px;
+	background:lightgray;
+}
+
+.card {
+	display:inline-block;
+	border: 1px solid gray;
+	margin: 1px;
+	padding: 2px;
+	width: 3ex;
+	text-align:center;
+}

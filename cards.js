@@ -86,7 +86,24 @@ module.exports=function(io) {
 				io.to(id).emit('owner');
 			}
 
-			io.to(this.name).emit('update players',this.players);
+			var player_element=['players','players']
+			var areas_element=['areas','areas']
+			var layout_elements=[player_element,areas_element];
+			for(var player in this.players) {
+				layout_elements.push([player,'text',this.players[player].name,player_element[0]]);
+				var hand=this.areas[this.players[player].hand]
+				layout_elements.push([hand.name,'cards',hand.readable.isAllowed(id)?hand.contents:Array(hand.length).fill('?'),player]);
+			}
+			for(var area in this.areas) {
+				if(area.substring(0,5)=='hand#') continue
+				layout_elements.push([area,'cards',this.areas[area].readable.isAllowed(id)?this.areas[area].contents:Array(this.areas[area].length).fill('?'),areas_element[0]]);
+			}
+
+			io.sockets.connected[id].emit('add layout elements',layout_elements);
+			io.sockets.connected[id].broadcast.to(this.name).emit('add layout elements', [
+				[id,'text',this.players[id].name,player_element[0]],
+				[cardArea.name,'cards',cardArea.contents,id],
+			]);
 		}},
 
 		leave:{value:function(id){
@@ -94,12 +111,15 @@ module.exports=function(io) {
 				var player=this.players[id];
 				if(player.hand in this.areas)
 					this.areas[player.hand].giveCardsTo(id,this.areas.deck,'all');
+				io.to(this.name).emit('remove layout elements',[
+					[id],
+					[this.players[id].hand],
+				]);
 				delete this.players[id];
 				if(this.owner==id) {
 					this.owner=Object.keys(this.players)[0];
 					io.to(this.owner).emit('owner');
 				}
-				io.to(this.name).emit('update players',this.players);
 			}
 		}},
 

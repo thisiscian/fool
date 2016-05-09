@@ -33,8 +33,10 @@ module.exports=function(io) {
 			for(var p in this.players) {
 				var hand=this.areas[this.players[p].hand];
 				this.areas.deck.giveCardsTo(p,hand,Array(6).fill('random'));
-				io.to(p).emit('update hand',hand.contents);
+				io.to(p).emit('update layout element',hand.name,hand.contents);
+				io.sockets.connected[p].broadcast.to(this.name).emit('update layout element', hand.name, Array(hand.length).fill('?'));
 			}
+			io.sockets.connected[p].broadcast.to(this.name).emit('update layout element', this.areas.deck.name,Array(this.areas.deck.length).fill('?'));
 		}},
 	});
 

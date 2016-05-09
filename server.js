@@ -8,6 +8,8 @@ const fool=require('./fool.js')(io)
 var games={}
 
 app.get('/' ,function(req,res){res.sendFile('index.html',{root:__dirname+'/html/'})});
+app.get('/js/:file' ,function(req,res){res.sendFile(req.params.file,{root:__dirname+'/html/js/'});});
+app.get('/css/:file' ,function(req,res){res.sendFile(req.params.file,{root:__dirname+'/html/css/'});});
 app.get('/*',function(req,res){res.sendFile('game.html' ,{root:__dirname+'/html/'})});
 
 io.on('connection',Connection);
@@ -39,7 +41,7 @@ function Connection(socket) {
 
 	console.log('Connection made',socket.id)
 //	socket.on('play cards',play_cards);
-	socket.on('join game' ,join_game);
+	socket.on('join' ,join_game);
 	socket.on('disconnect',leave_game);
 	socket.on('start',start_game);
 }

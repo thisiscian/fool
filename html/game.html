@@ -4,99 +4,16 @@
 	<meta content='utf-8' http-equiv='encoding'>
 	<title>fool/game</title>
 	<head>
+		<link rel='stylesheet' type='text/css' href='/css/cards.css'></link>
 		<script src="/socket.io/socket.io.js"></script>
+		<script src='/js/cards.js'></script>
+		<script src='/js/fool.js'></script>
 	</head>
 	<body>
 		<h1>fool game</h1>
-		<div id='players'>players:undefined</div>
-		<div id='hand'>hand:undefined</div>
-		<div id='status'>status:undefined</div>
-		<div id='trump'>trump:</div>
-		<button onclick='play_selected_cards()'>play cards</button>
-		<script> 
-			function render_card(card) {
-				var cards=['&hearts;','&spades;','&diams;','&clubs;']
-				var ranks=['7','8','9','10','J','Q','K','A']
-				var c=document.createElement('div')
-				c.innerHTML=ranks[card[1]]+cards[card[0]];
-				return c;
-			}
-			
-			function toggle_select_card(card_index) {
-				if(selected_cards[card_index])
-					selected_cards.splice(card_index,1)
-				else
-					selected_cards[card_index]=true;
-				update_hand();
-			}
-
-			function play_selected_cards() {
-				socket.emit('play',selected_cards,defend_against)
-			}
-
-			function update_players(players) {
-				players_div.innerHTML='';
-				for(var p in players)
-					players_div.innerHTML+='<div>'+players[p].name+'</div>'	
-			}
-			function update_hand(h) {
-				hand=h;
-				hand_div.innerHTML='hand:'
-				for(var card in hand) {
-					var c=render_card(hand[card])
-					c.onclick=(function(card){return function(){toggle_select_card(card)};})(card);
-					if(selected_cards[card])
-						c.innerHTML+='*'
-					hand_div.appendChild(c)
-				}
-			}
-			function update_trump() {
-				trump_div.appendChild(render_card(trump))
-			}
-			function update_status() {
-				status_div.innerHTML='<div>status:'+(defender=='/#'+socket.id?'defender':'attacker')+'</div>'
-			}
-
-			var players={}
-			var hand=[];
-			var board=[];
-			var trump=[];
-			var selected_cards=[];
-			var defender=undefined;
-			var defend_against=undefined;
-			var players_div=document.getElementById('players')
-			var hand_div=document.getElementById('hand')
-			var trump_div=document.getElementById('trump')
-			var status_div=document.getElementById('status')
-
-			var socket=io()
-			socket.emit('join game', window.location.pathname);	
-
-			socket.on('update players', update_players);
-			socket.on('update hand', update_hand);
-
-			socket.on('owner', function(h) {
-				var start_btn=document.createElement('input')
-				start_btn.id='start'
-				start_btn.type='button'
-				start_btn.value='start'
-				start_btn.onclick=function() { socket.emit('start'); document.body.removeChild(this);};
-				document.body.appendChild(start_btn);
-			});
-			
-			socket.on('start',function() {
-				document.body.removeChild(document.getElementById('start'));
-			});
-
-			socket.on('trump', function(t) {
-				trump=t;
-				update_trump();
-			});
-			socket.on('defender', function(d) {
-				defender=d;
-				update_status();
-			});
-
+		<script>
+			var fool=new FoolGame();
+			fool.start();
 		</script>
 	</body>
 </html>
